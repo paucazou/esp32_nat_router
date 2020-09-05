@@ -22,6 +22,7 @@ int set_sta(int argc, char **argv);
 int set_ap(int argc, char **argv);
 
 httpd_handle_t start_webserver(void);
+#define BLINK_GPIO 2
 
 #ifdef __cplusplus
 }

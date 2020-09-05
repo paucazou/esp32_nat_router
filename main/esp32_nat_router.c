@@ -14,6 +14,7 @@
 #include "esp_console.h"
 #include "esp_vfs_dev.h"
 #include "driver/uart.h"
+#include "driver/gpio.h"
 #include "linenoise/linenoise.h"
 #include "argtable3/argtable3.h"
 #include "esp_vfs_fat.h"
@@ -156,9 +157,11 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
         ap_connect = true;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+        gpio_set_level(BLINK_GPIO, 1);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         ESP_LOGI(TAG,"disconnected - retry to connect to the AP");
+        gpio_set_level(BLINK_GPIO, 0);
         ap_connect = false;
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
@@ -255,6 +258,7 @@ void wifi_init(const char* ssid, const char* passwd, const char* ap_ssid, const 
     if (strlen(ssid) > 0) {
         ESP_LOGI(TAG, "wifi_init_apsta finished.");
         ESP_LOGI(TAG, "connect to ap SSID: %s ", ssid);
+        gpio_set_level(BLINK_GPIO, 1);
     } else {
         ESP_LOGI(TAG, "wifi_init_ap with default finished.");      
     }
@@ -273,6 +277,9 @@ char* param_set_default(const char* def_val) {
 
 void app_main(void)
 {
+    // set up LED
+    gpio_reset_pin(BLINK_GPIO);
+    gpio_set_direction(BLINK_GPIO,GPIO_MODE_OUTPUT);
     initialize_nvs();
 
 #if CONFIG_STORE_HISTORY
